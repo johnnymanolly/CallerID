@@ -1,0 +1,306 @@
+package callerid;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Date;
+import java.util.Scanner;
+
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
+
+
+ 
+public class CallerID extends JFrame {
+	
+	private static final long serialVersionUID = 1L;
+	private int width = 400;
+	private int height = 350;
+	
+	
+	File database = new File("E:/Database.txt");
+
+	private JPanel window = new JPanel();
+	String csvFile = "E:/History.txt";
+	BufferedReader br = null;
+	String line = "";
+	String cvsSplitBy = ";";
+	String dash = "-";
+	String space = " ";
+	String[] text = new String[10];
+	String[] daytime = new String[10];
+	String[] day = new String[10];
+	
+       
+        public int count = 10;
+        int dayCalls = 0;
+        int currentDay;
+        int ybox = 23;
+
+        private int missedCalls = 0;
+  	    int johnny, jack, dominique, olivia, charles;
+        
+        
+     	JTextArea ta;
+	    JButton button, showStatistics;
+	    Rectangle rec;
+	    JLabel  label;
+        String[] users = {"","OLIVIA","JOHNNY", "Jack", "Dominique", "Charles"};
+        JComboBox<String>[] combo;
+        JScrollPane scroll;
+        
+       
+        Font font = new Font("Verdana", Font.PLAIN, 11);
+    
+	
+ public CallerID(){
+	         
+	    getContentPane().add(window);
+	    window.setLayout(null);
+	    setSize(width, height);
+	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    setLocationRelativeTo(null);
+	    setResizable(false);
+	   
+       
+         
+         
+	    label = new JLabel(" Index        Date            Time          Number                            User");
+	    ta = new JTextArea("\n\t   Click Refresh!");
+        ta.setBackground(Color.yellow);
+	    ta.setEditable(false);
+        button = new JButton("Refresh");
+        showStatistics = new JButton("Show Statistics");
+        scroll = new JScrollPane (ta);
+            
+            defineLocation();
+	   
+ }
+ 
+ 
+  private void defineLocation() {
+	  
+	  rec = new Rectangle(width / 2, height - 50, width / 2, 25);
+	  button.setBounds(rec);
+      showStatistics.setBounds(0, height - 50, width / 2, 25);
+	  label.setBounds(0, 2, width, 20);
+	  scroll.setBounds(0, 26, width - 8, height - 75);
+      scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+          
+       
+}
+
+
+public void run() {
+	
+      window.add(button);
+      window.add(label);
+      window.add(scroll);
+      window.add(showStatistics);
+      
+       drawComboBoxes();
+       onRefresh();
+       showStatistics();
+                       
+}
+  
+
+  private void onRefresh(){
+	  
+	  button.addActionListener(new ActionListener() {
+		public void actionPerformed(ActionEvent arg0) {
+			      ta.setFont(font);
+                  ta.setText("");
+                    count = 0;                  
+		           readHistory();
+		           
+		}
+	});
+  }
+	  
+  
+  private void readHistory(){
+    dayCalls = 0;
+  	try {
+			br = new BufferedReader(new FileReader(csvFile));
+			while ((line = br.readLine()) != null) {
+			          count++;
+			
+			     text = line.split(cvsSplitBy);
+			     ta.append(" [" +count+ "] " + "[" + text[0] + " - " + text[5] + "]" + "\n-------------------------------------------------------------\n");
+			     
+			     daytime = text[0].split(dash);
+			     day = daytime[2].split(space);
+			     
+			     if((new Date().getDate()) == Integer.parseInt(day[0]) && new Date().getMonth() +1 == Integer.parseInt(daytime[1])){
+			    	dayCalls++;
+			    	currentDay = count;
+			     }
+			     
+			    
+			     
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally {
+			
+					try {
+						br.close();
+					} catch (IOException e) {
+                       e.printStackTrace();
+					}
+					  // code
+					   
+				        blockComboBoxes();
+                        loadSaveSelectedName();  
+                        
+				} 
+	            
+		}
+        
+  private void blockComboBoxes(){
+	 
+      for(int i = 1; i < count; i++){
+      
+    	  if(combo[i].getSelectedItem() != ""){
+				combo[i].setEnabled(false);
+				combo[i].setBackground(Color.BLUE);
+			}
+      }
+  }
+
+
+
+  private void  drawComboBoxes(){
+	  
+	  combo = new JComboBox[500]; 
+	  combo[1] = new JComboBox(users);
+	  combo[1].setBounds(width - 110, 0 , 85, 23);
+	  ta.add(combo[1]);
+	  for(int i = 2; i < 500; i++){
+	  combo[i] = new JComboBox(users);
+	  combo[i].setBounds(width - 110, ybox , 85, 30);
+	  ybox = ybox + 30;
+	  ta.add(combo[i]); 
+	  combo[i].setForeground(Color.RED);
+	  }
+  }
+  
+  
+  public void saveSelectedName(){
+	  
+	  try {
+		  
+			PrintWriter pw = new PrintWriter(database);
+			for(int i = 1; i < count; i++){
+				if(combo[i].getSelectedItem() != ""){
+					pw.println(i + ";" +combo[i].getSelectedItem() +"\n");
+				}
+			}
+			pw.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+  }
+  
+		
+  public void loadSaveSelectedName(){
+	   
+        String[] s = new String[2];
+
+	  try {
+		Scanner read = new Scanner(database);
+		while((line = read.next()) != null){
+			s = line.split(cvsSplitBy);
+			  
+			            int index = Integer.parseInt(s[0]);
+                        combo[index].setSelectedItem(s[1]);
+                        combo[index].setEnabled(false);
+                        combo[index].setBackground(Color.BLUE);
+                          
+		}
+		  read.close();
+             
+	} catch (FileNotFoundException e) {
+		e.printStackTrace();
+	} finally{
+        saveSelectedName();
+        missedCalls();
+        
+        
+	}
+  }
+  
+  public void  missedCalls(){
+	  missedCalls = 0;
+	  for(int i = currentDay - dayCalls +1; i < count; i++){
+		  if(combo[i].getSelectedItem() == "")  {
+			  missedCalls++;
+			  setTitle("Phonexpat | Missed Calls = " +missedCalls);
+		  }
+		  
+	  }
+  }
+  
+  public void showStatistics(){
+      
+	  
+	  showStatistics.addActionListener(new ActionListener() {
+		public void actionPerformed(ActionEvent arg0) {
+			  blockComboBoxes();	  
+			  olivia = 0;
+			  johnny = 0;
+			  dominique = 0;
+			  jack = 0;
+			  charles = 0;
+		      
+			  
+			
+	  for(int i = currentDay - dayCalls +1; i < count; i++){
+		  if(combo[i].getSelectedItem() == "OLIVIA")  olivia++;
+		  if(combo[i].getSelectedItem() == "JOHNNY")  johnny++;
+		  if(combo[i].getSelectedItem() == "Dominique")  dominique++;
+		  if(combo[i].getSelectedItem() == "Jack")  jack++;
+		  if(combo[i].getSelectedItem() == "Charles")  charles++;	
+		  } 
+	      Font font2 = new Font("Verdana", Font.PLAIN, 14);
+	      ta.setFont(font2);
+	      ta.setText("     '"+new Date() +"'\n\n" 
+	            + "1- Johnny answered " +johnny + " calls\n"
+	     	  	+ "2- Jack answered " +jack + " calls\n"
+	            + "3- Charles answered " +charles + " calls\n"
+	            + "4- Dominique answered " +dominique + " calls\n"
+	            + "5- Olivia answered " +olivia + " calls\n");
+	      ta.append("\n\n\n\n\n         Number of calls today: " +dayCalls
+	    		   +"\n         Missed Calls: " +missedCalls);
+	     	}
+		});
+	  }
+  
+	  
+	  
+    
+  public static void main(String[] args) {
+	  
+		CallerID obj = new CallerID();
+		obj.run();
+		obj.setVisible(true);
+	    
+	  }
+}
